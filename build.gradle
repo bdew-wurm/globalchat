@@ -1,0 +1,49 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+group "net.bdew.wurm"
+version "0.3"
+
+repositories {
+    mavenCentral()
+    maven { url "http://jcenter.bintray.com" }
+    maven { url "http://gotti.no-ip.org/maven/repository" }
+    maven { url "http://repo.maven.apache.org/maven2" }
+}
+
+dependencies {
+    compile 'net.dv8tion:JDA:3.3.1_289'
+    compile 'org.slf4j:slf4j-jdk14:1.7.25'
+    compile 'org.gotti.wurmunlimited:server-modlauncher:0.32'
+}
+
+
+shadowJar {
+    archiveName "${project.name}.jar"
+    dependencies {
+        exclude(dependency('org.gotti.wurmunlimited:server-modlauncher:0.32'))
+        exclude(dependency('org.gotti.wurmunlimited:common:2182584'))
+        exclude(dependency('org.gotti.wurmunlimited:server:2182584'))
+        exclude(dependency('org.javassist:javassist:3.20.0-GA'))
+    }
+    exclude 'natives/*/*'
+}
+
+task dist(type: Zip) {
+    into("mods", {
+        into(project.name, {
+            from shadowJar
+        })
+        from fileTree(dir: 'mods', include: '*')
+    })
+    archiveName "${project.name}-${project.version}.zip"
+}
