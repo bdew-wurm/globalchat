@@ -63,6 +63,11 @@ public class ChatHandler {
         player.getCommunicator().sendMessage(mess);
     }
 
+    static void sendToPlayersAndServers(String author, String msg, long wurmId, int r, int g, int b) {
+        sendToPlayers(author, msg, wurmId, r, g, b);
+        sendToServers(author, msg, wurmId, r, g, b);
+    }
+
     static void sendToPlayers(String author, String msg, long wurmId, int r, int g, int b) {
         Message mess = new Message(null, (byte) 16, "Global", "<" + author + "> " + msg);
         mess.setColorR(r);
