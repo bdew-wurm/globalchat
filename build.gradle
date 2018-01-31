@@ -21,7 +21,7 @@ repositories {
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.3.1_289'
+    compile 'net.dv8tion:JDA:3.5.0_327'
     compile 'org.slf4j:slf4j-jdk14:1.7.25'
     compile 'org.gotti.wurmunlimited:server-modlauncher:0.32'
 }

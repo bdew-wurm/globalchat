@@ -10,7 +10,6 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.StatusChangeEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import javax.security.auth.login.LoginException;
@@ -44,7 +43,7 @@ public class DiscordHandler extends ListenerAdapter {
 
         try {
             jda = new JDABuilder(AccountType.BOT).setToken(GlobalChatMod.botToken).addEventListener(new DiscordHandler()).buildAsync();
-        } catch (LoginException | RateLimitedException e) {
+        } catch (LoginException e) {
             GlobalChatMod.logException("Error connecting to discord", e);
         }
     }
@@ -60,7 +59,7 @@ public class DiscordHandler extends ListenerAdapter {
                     ChatHandler.sendToPlayersAndServers("@" + name, url, -10L, -1, -1, -1);
                 }
             }
-            String msg = event.getMessage().getContent().trim();
+            String msg = event.getMessage().getContentDisplay().trim();
             for (Map.Entry<String, String> p : emojis.entrySet()) {
                 msg = msg.replace(p.getKey(), p.getValue());
             }
