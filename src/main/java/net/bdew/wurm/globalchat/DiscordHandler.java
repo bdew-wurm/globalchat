@@ -63,8 +63,11 @@ public class DiscordHandler extends ListenerAdapter {
             for (Map.Entry<String, String> p : emojis.entrySet()) {
                 msg = msg.replace(p.getKey(), p.getValue());
             }
-            if (msg.length() > 0) {
-                ChatHandler.sendToPlayersAndServers("@" + name, msg, -10L, -1, -1, -1);
+            for (String part : msg.split("\n")) {
+                part = part.trim();
+                if (part.length() > 0) {
+                    ChatHandler.sendToPlayersAndServers("@" + name, part, -10L, -1, -1, -1);
+                }
             }
         }
     }
