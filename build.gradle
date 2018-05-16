@@ -11,7 +11,7 @@ apply plugin: 'java'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group "net.bdew.wurm"
-version "1.0"
+version "1.1"
 
 repositories {
     mavenCentral()
@@ -23,16 +23,16 @@ repositories {
 dependencies {
     compile 'net.dv8tion:JDA:3.5.0_327'
     compile 'org.slf4j:slf4j-jdk14:1.7.25'
-    compile 'org.gotti.wurmunlimited:server-modlauncher:0.32'
+    compile 'org.gotti.wurmunlimited:server-modlauncher:0.35-beta1'
 }
 
 
 shadowJar {
     archiveName "${project.name}.jar"
     dependencies {
-        exclude(dependency('org.gotti.wurmunlimited:server-modlauncher:0.32'))
-        exclude(dependency('org.gotti.wurmunlimited:common:2182584'))
-        exclude(dependency('org.gotti.wurmunlimited:server:2182584'))
+        exclude(dependency('org.gotti.wurmunlimited:server-modlauncher:0.35-beta1'))
+        exclude(dependency('org.gotti.wurmunlimited:common:2726178'))
+        exclude(dependency('org.gotti.wurmunlimited:server:2726178'))
         exclude(dependency('org.javassist:javassist:3.20.0-GA'))
     }
     exclude 'natives/*/*'

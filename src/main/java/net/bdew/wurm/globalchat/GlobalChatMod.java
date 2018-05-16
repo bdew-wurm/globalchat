@@ -15,7 +15,6 @@ public class GlobalChatMod implements WurmServerMod, Configurable, PreInitable, 
 
     static String botToken;
     static String serverName;
-    static String channelName;
 
     public static void logException(String msg, Throwable e) {
         if (logger != null)
@@ -36,7 +35,9 @@ public class GlobalChatMod implements WurmServerMod, Configurable, PreInitable, 
     public void configure(Properties properties) {
         botToken = properties.getProperty("botToken");
         serverName = properties.getProperty("serverName");
-        channelName = properties.getProperty("channelName");
+        CustomChannel.GLOBAL.discordName = properties.getProperty("globalName");
+        CustomChannel.HELP.discordName = properties.getProperty("helpName");
+        CustomChannel.TICKETS.discordName = properties.getProperty("ticketName");
     }
 
     @Override
@@ -46,7 +47,7 @@ public class GlobalChatMod implements WurmServerMod, Configurable, PreInitable, 
 
             CtClass ctPlayers = classPool.getCtClass("com.wurmonline.server.Players");
             ctPlayers.getMethod("sendGlobalKingdomMessage", "(Lcom/wurmonline/server/creatures/Creature;JLjava/lang/String;Ljava/lang/String;ZBIII)V")
-                    .insertBefore(" if (kingdom == (byte)-1) {net.bdew.wurm.globalchat.ChatHandler.sendMessage($$); return;}");
+                    .insertBefore(" if (kingdom < 0) {net.bdew.wurm.globalchat.ChatHandler.sendMessage($$); return;}");
 
             ctPlayers.getMethod("sendStartKingdomChat", "(Lcom/wurmonline/server/players/Player;)V").setBody("return;");
             ctPlayers.getMethod("sendStartGlobalKingdomChat", "(Lcom/wurmonline/server/players/Player;)V").setBody("return;");
@@ -59,6 +60,7 @@ public class GlobalChatMod implements WurmServerMod, Configurable, PreInitable, 
 
             ctPlayer.getMethod("isKingdomChat", "()Z").setBody("return false;");
             ctPlayer.getMethod("isGlobalChat", "()Z").setBody("return false;");
+            ctPlayer.getMethod("seesPlayerAssistantWindow", "()Z").setBody("return false;");
 
             classPool.getCtClass("com.wurmonline.server.Server").getMethod("shutDown", "()V")
                     .insertBefore("net.bdew.wurm.globalchat.ChatHandler.serverStopped();");
@@ -66,6 +68,11 @@ public class GlobalChatMod implements WurmServerMod, Configurable, PreInitable, 
             classPool.getCtClass("com.wurmonline.server.ServerEntry").getMethod("setAvailable", "(ZZIIII)V")
                     .insertBefore("if (this.isAvailable != $1) net.bdew.wurm.globalchat.ChatHandler.serverAvailable(this, $1);");
 
+            classPool.getCtClass("com.wurmonline.server.support.Tickets").getMethod("addTicket","(Lcom/wurmonline/server/support/Ticket;Z)Lcom/wurmonline/server/support/Ticket;")
+                    .insertBefore("net.bdew.wurm.globalchat.TicketHandler.updateTicket($1);");
+
+            classPool.getCtClass("com.wurmonline.server.support.Ticket").getMethod("addTicketAction","(Lcom/wurmonline/server/support/TicketAction;)V")
+                    .insertBefore("net.bdew.wurm.globalchat.TicketHandler.addTicketAction(this, $1);");
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -82,9 +89,21 @@ public class GlobalChatMod implements WurmServerMod, Configurable, PreInitable, 
         if (communicator.player.getPower() >= 4 && message.startsWith("#discordreconnect")) {
             DiscordHandler.initJda();
             return MessagePolicy.DISCARD;
-        } else if (title.equals("Global") && !message.startsWith("#") && !message.startsWith("/")) {
-            ChatHandler.handleGlobalMessage(communicator, message);
+        } else if (communicator.player.getPower() >= 1 && message.startsWith("#eventmsg")) {
+            String msg = message.replace("#eventmsg", "").trim();
+            ChatHandler.setUpcomingEvent(msg);
+            if (msg.length()>0)
+                communicator.sendNormalServerMessage("Set event line: "+msg);
+            else
+                communicator.sendNormalServerMessage("Cleared event line.");
             return MessagePolicy.DISCARD;
+        } else if (!message.startsWith("#") && !message.startsWith("/")) {
+            CustomChannel chan = CustomChannel.findByIngameName(title);
+            if (chan != null) {
+                if (chan.canPlayersSend)
+                    ChatHandler.handleGlobalMessage(chan, communicator, message);
+                return MessagePolicy.DISCARD;
+            } else return MessagePolicy.PASS;
         } else {
             return MessagePolicy.PASS;
         }
