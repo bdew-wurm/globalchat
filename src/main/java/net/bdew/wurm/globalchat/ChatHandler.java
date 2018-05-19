@@ -135,4 +135,10 @@ public class ChatHandler {
             DiscordHandler.sendToDiscord(CustomChannel.GLOBAL, String.format("**%s is %s**", ent.getName(), available ? "now online!" : "shutting down."));
         }
     }
+
+    public static void handleBroadcast(String msg) {
+        if (msg.startsWith("The settlement of") || msg.startsWith("Rumours of") || msg.endsWith("has been slain.")) {
+            ChatHandler.sendToPlayersAndServers(CustomChannel.GLOBAL, "[" + Servers.getLocalServerName() + "]", msg, -10L, 255, 140, 0);
+        }
+    }
 }

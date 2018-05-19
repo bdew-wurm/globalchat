@@ -62,16 +62,20 @@ public class GlobalChatMod implements WurmServerMod, Configurable, PreInitable, 
             ctPlayer.getMethod("isGlobalChat", "()Z").setBody("return false;");
             ctPlayer.getMethod("seesPlayerAssistantWindow", "()Z").setBody("return false;");
 
-            classPool.getCtClass("com.wurmonline.server.Server").getMethod("shutDown", "()V")
-                    .insertBefore("net.bdew.wurm.globalchat.ChatHandler.serverStopped();");
+            CtClass CtServer = classPool.getCtClass("com.wurmonline.server.Server");
+
+            CtServer.getMethod("shutDown", "()V").insertBefore("net.bdew.wurm.globalchat.ChatHandler.serverStopped();");
+            CtServer.getMethod("broadCastNormal", "(Ljava/lang/String;Z)V").insertBefore("net.bdew.wurm.globalchat.ChatHandler.handleBroadcast($1);");
+            CtServer.getMethod("broadCastSafe", "(Ljava/lang/String;ZB)V").insertBefore("net.bdew.wurm.globalchat.ChatHandler.handleBroadcast($1);");
+            CtServer.getMethod("broadCastAlert", "(Ljava/lang/String;ZB)V").insertBefore("net.bdew.wurm.globalchat.ChatHandler.handleBroadcast($1);");
 
             classPool.getCtClass("com.wurmonline.server.ServerEntry").getMethod("setAvailable", "(ZZIIII)V")
                     .insertBefore("if (this.isAvailable != $1) net.bdew.wurm.globalchat.ChatHandler.serverAvailable(this, $1);");
 
-            classPool.getCtClass("com.wurmonline.server.support.Tickets").getMethod("addTicket","(Lcom/wurmonline/server/support/Ticket;Z)Lcom/wurmonline/server/support/Ticket;")
+            classPool.getCtClass("com.wurmonline.server.support.Tickets").getMethod("addTicket", "(Lcom/wurmonline/server/support/Ticket;Z)Lcom/wurmonline/server/support/Ticket;")
                     .insertBefore("net.bdew.wurm.globalchat.TicketHandler.updateTicket($1);");
 
-            classPool.getCtClass("com.wurmonline.server.support.Ticket").getMethod("addTicketAction","(Lcom/wurmonline/server/support/TicketAction;)V")
+            classPool.getCtClass("com.wurmonline.server.support.Ticket").getMethod("addTicketAction", "(Lcom/wurmonline/server/support/TicketAction;)V")
                     .insertBefore("net.bdew.wurm.globalchat.TicketHandler.addTicketAction(this, $1);");
         } catch (Throwable e) {
             throw new RuntimeException(e);
@@ -92,8 +96,8 @@ public class GlobalChatMod implements WurmServerMod, Configurable, PreInitable, 
         } else if (communicator.player.getPower() >= 1 && message.startsWith("#eventmsg")) {
             String msg = message.replace("#eventmsg", "").trim();
             ChatHandler.setUpcomingEvent(msg);
-            if (msg.length()>0)
-                communicator.sendNormalServerMessage("Set event line: "+msg);
+            if (msg.length() > 0)
+                communicator.sendNormalServerMessage("Set event line: " + msg);
             else
                 communicator.sendNormalServerMessage("Cleared event line.");
             return MessagePolicy.DISCARD;
