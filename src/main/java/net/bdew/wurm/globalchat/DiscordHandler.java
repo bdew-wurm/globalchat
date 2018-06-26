@@ -16,7 +16,6 @@ import javax.security.auth.login.LoginException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -82,7 +81,7 @@ public class DiscordHandler extends ListenerAdapter {
 
     public static void sendToDiscord(CustomChannel channel, String msg) {
         try {
-            if (jda == null) return;
+            if (jda == null || channel.discordName == null) return;
             if (jda.getStatus() != JDA.Status.CONNECTED) {
                 GlobalChatMod.logInfo(String.format("Discord not ready, queueing: [%s] %s", channel, msg));
                 sendQueues.get(channel).add(msg);
