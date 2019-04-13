@@ -46,7 +46,7 @@ public class DiscordHandler extends ListenerAdapter {
         }
 
         try {
-            jda = new JDABuilder(AccountType.BOT).setToken(GlobalChatMod.botToken).addEventListener(new DiscordHandler()).buildAsync();
+            jda = new JDABuilder(AccountType.BOT).setToken(GlobalChatMod.botToken).addEventListener(new DiscordHandler()).build();
         } catch (LoginException e) {
             GlobalChatMod.logException("Error connecting to discord", e);
         }
@@ -98,9 +98,9 @@ public class DiscordHandler extends ListenerAdapter {
 
     @Override
     public void onStatusChange(StatusChangeEvent event) {
-        GlobalChatMod.logInfo(String.format("Discord status is now %s", event.getStatus()));
+        GlobalChatMod.logInfo(String.format("Discord status is now %s", event.getNewStatus()));
         try {
-            if (event.getStatus() == JDA.Status.CONNECTED) {
+            if (event.getNewStatus() == JDA.Status.CONNECTED) {
                 for (CustomChannel channel: CustomChannel.values()) {
                     ConcurrentLinkedQueue<String> sendQueue = sendQueues.get(channel);
                     if (!sendQueue.isEmpty()) {

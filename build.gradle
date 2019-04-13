@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:5.0.0'
     }
 }
 
@@ -18,22 +18,25 @@ repositories {
     maven { url "http://jcenter.bintray.com" }
     maven { url "http://gotti.no-ip.org/maven/repository" }
     maven { url "http://repo.maven.apache.org/maven2" }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.5.0_327'
+    compile 'net.dv8tion:JDA:3.8.3_462'
     compile 'org.slf4j:slf4j-jdk14:1.7.25'
-    compile 'org.gotti.wurmunlimited:server-modlauncher:0.35-beta1'
+    compile 'org.gotti.wurmunlimited:server-modlauncher:0.43'
+    compile 'com.github.bdew-wurm:bdew_server_mod_tools:v1.0.0'
 }
 
 
 shadowJar {
     archiveName "${project.name}.jar"
     dependencies {
-        exclude(dependency('org.gotti.wurmunlimited:server-modlauncher:0.35-beta1'))
-        exclude(dependency('org.gotti.wurmunlimited:common:2726178'))
-        exclude(dependency('org.gotti.wurmunlimited:server:2726178'))
-        exclude(dependency('org.javassist:javassist:3.20.0-GA'))
+        exclude(dependency('org.gotti.wurmunlimited:server-modlauncher:0.43'))
+        exclude(dependency('org.gotti.wurmunlimited:common:3720466'))
+        exclude(dependency('org.gotti.wurmunlimited:server:3720466'))
+        exclude(dependency('org.javassist:javassist:3.23.1-GA'))
+        exclude(dependency('com.github.bdew-wurm:bdew_server_mod_tools:v1.0.0'))
     }
     exclude 'natives/*/*'
 }

@@ -5,6 +5,7 @@ import com.wurmonline.server.creatures.Communicator;
 import com.wurmonline.server.creatures.Creature;
 import com.wurmonline.server.players.Player;
 import com.wurmonline.server.webinterface.WcKingdomChat;
+import net.bdew.wurm.tools.server.ServerThreadExecutor;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -93,16 +94,18 @@ public class ChatHandler {
     }
 
     static void sendToPlayers(CustomChannel channel, String author, String msg, long wurmId, int r, int g, int b) {
-        Message mess = new Message(null, (byte) 16, channel.ingameName, (author.length() == 0 ? "" : "<" + author + "> ") + msg);
-        mess.setColorR(r);
-        mess.setColorG(g);
-        mess.setColorB(b);
-        final Player[] playarr = Players.getInstance().getPlayers();
-        for (Player player : playarr) {
-            if (!player.isIgnored(wurmId)) {
-                player.getCommunicator().sendMessage(mess);
+        ServerThreadExecutor.INSTANCE.execute(() -> {
+            Message mess = new Message(null, (byte) 16, channel.ingameName, (author.length() == 0 ? "" : "<" + author + "> ") + msg);
+            mess.setColorR(r);
+            mess.setColorG(g);
+            mess.setColorB(b);
+            final Player[] playarr = Players.getInstance().getPlayers();
+            for (Player player : playarr) {
+                if (!player.isIgnored(wurmId)) {
+                    player.getCommunicator().sendMessage(mess);
+                }
             }
-        }
+        });
     }
 
     static void sendToServers(CustomChannel channel, String author, String msg, long wurmId, int r, int g, int b) {
