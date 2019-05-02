@@ -1,14 +1,7 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:5.0.0'
-    }
+plugins {
+    id "java"
+    id "com.github.johnrengelman.shadow" version "5.0.0"
 }
-
-apply plugin: 'java'
-apply plugin: 'com.github.johnrengelman.shadow'
 
 group "net.bdew.wurm"
 version "1.1"
@@ -17,27 +10,24 @@ repositories {
     mavenCentral()
     maven { url "http://jcenter.bintray.com" }
     maven { url "http://gotti.no-ip.org/maven/repository" }
-    maven { url "http://repo.maven.apache.org/maven2" }
     maven { url 'https://jitpack.io' }
 }
 
+configurations {
+    shadowed
+    compile.extendsFrom shadowed
+}
+
 dependencies {
-    compile 'net.dv8tion:JDA:3.8.3_462'
-    compile 'org.slf4j:slf4j-jdk14:1.7.25'
+    shadowed 'net.dv8tion:JDA:3.8.3_462'
+    shadowed 'org.slf4j:slf4j-jdk14:1.7.25'
     compile 'org.gotti.wurmunlimited:server-modlauncher:0.43'
     compile 'com.github.bdew-wurm:bdew_server_mod_tools:v1.0.0'
 }
 
-
 shadowJar {
-    archiveName "${project.name}.jar"
-    dependencies {
-        exclude(dependency('org.gotti.wurmunlimited:server-modlauncher:0.43'))
-        exclude(dependency('org.gotti.wurmunlimited:common:3720466'))
-        exclude(dependency('org.gotti.wurmunlimited:server:3720466'))
-        exclude(dependency('org.javassist:javassist:3.23.1-GA'))
-        exclude(dependency('com.github.bdew-wurm:bdew_server_mod_tools:v1.0.0'))
-    }
+    configurations = [project.configurations.shadowed]
+    archiveFileName = "${project.name}.jar"
     exclude 'natives/*/*'
 }
 
@@ -48,5 +38,5 @@ task dist(type: Zip) {
         })
         from fileTree(dir: 'mods', include: '*')
     })
-    archiveName "${project.name}-${project.version}.zip"
+    archiveFileName = "${project.name}-${project.version}.zip"
 }
