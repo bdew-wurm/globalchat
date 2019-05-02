@@ -21,9 +21,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DiscordHandler extends ListenerAdapter {
-    static JDA jda;
+    private static JDA jda;
 
-    static Map<CustomChannel, ConcurrentLinkedQueue<String>> sendQueues =
+    private static Map<CustomChannel, ConcurrentLinkedQueue<String>> sendQueues =
             Arrays.stream(CustomChannel.values()).collect(Collectors.toMap(Function.identity(), x -> new ConcurrentLinkedQueue<>()));
 
     private static Map<String, String> emojis = new HashMap<>();
@@ -35,6 +35,8 @@ public class DiscordHandler extends ListenerAdapter {
         emojis.put("\uD83D\uDE26", ":(");
         emojis.put("\uD83D\uDE22", ":`(");
         emojis.put("\uD83D\uDE17", ":*");
+        emojis.put("\uD83D\uDC94", "</3");
+        emojis.put("\u2764", "<3");
     }
 
     static void initJda() {
