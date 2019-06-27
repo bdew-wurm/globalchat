@@ -82,10 +82,9 @@ public class ChatHandler {
         systemMessage(player, CustomChannel.INFO, "Welcome to Otherlands PVE Cluster!");
         systemMessage(player, CustomChannel.INFO, "Check out our website for all info on the servers and maps: https://otherlands.bdew.net/");
         systemMessage(player, CustomChannel.INFO, "Join us in discord - https://discord.gg/58wmTbv");
-        systemMessage(player, CustomChannel.INFO, "And if you enjoy playing here please vote - https://wurm-unlimited.com/server/863/vote/");
+
         if (eventsMsg.length() > 0)
             systemMessage(player, CustomChannel.INFO, eventsMsg, 255, 140, 0);
-
     }
 
     static void sendToPlayersAndServers(CustomChannel channel, String author, String msg, long wurmId, int r, int g, int b) {
