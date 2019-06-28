@@ -1,11 +1,13 @@
 package net.bdew.wurm.globalchat;
 
+import com.wurmonline.server.Players;
 import com.wurmonline.server.Servers;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.ChannelType;
+import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.StatusChangeEvent;
@@ -27,6 +29,9 @@ public class DiscordHandler extends ListenerAdapter {
             Arrays.stream(CustomChannel.values()).collect(Collectors.toMap(Function.identity(), x -> new ConcurrentLinkedQueue<>()));
 
     private static Map<String, String> emojis = new HashMap<>();
+
+    private static long lastStatusUpdate = Long.MIN_VALUE;
+    private static int lastPlayers = -1;
 
     static {
         emojis.put("\uD83D\uDE1B", ":P");
@@ -58,7 +63,7 @@ public class DiscordHandler extends ListenerAdapter {
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.isFromType(ChannelType.TEXT) && !event.getAuthor().isBot()) {
             CustomChannel channel = CustomChannel.findByDiscordName(event.getTextChannel().getName());
-            if (channel!=null && !channel.discordOnly) {
+            if (channel != null && !channel.discordOnly) {
                 String name = event.getMember().getNickname();
                 if (name == null) name = event.getAuthor().getName();
                 for (Message.Attachment att : event.getMessage().getAttachments()) {
@@ -103,7 +108,10 @@ public class DiscordHandler extends ListenerAdapter {
         GlobalChatMod.logInfo(String.format("Discord status is now %s", event.getNewStatus()));
         try {
             if (event.getNewStatus() == JDA.Status.CONNECTED) {
-                for (CustomChannel channel: CustomChannel.values()) {
+                lastPlayers = -1;
+                lastStatusUpdate = Long.MIN_VALUE;
+                poll();
+                for (CustomChannel channel : CustomChannel.values()) {
                     ConcurrentLinkedQueue<String> sendQueue = sendQueues.get(channel);
                     if (!sendQueue.isEmpty()) {
                         TextChannel discordChannel = jda.getGuildsByName(GlobalChatMod.serverName, true).get(0).getTextChannelsByName(channel.discordName, true).get(0);
@@ -120,5 +128,23 @@ public class DiscordHandler extends ListenerAdapter {
         } catch (Exception e) {
             GlobalChatMod.logException("Error sending to discord", e);
         }
+    }
+
+    public static void poll() {
+        if (System.currentTimeMillis() > lastStatusUpdate + 30000 && jda != null && jda.getStatus() == JDA.Status.CONNECTED) {
+            lastStatusUpdate = System.currentTimeMillis();
+
+            int players = Arrays.stream(com.wurmonline.server.Servers.getAllServers())
+                    .filter(i -> i.id != Servers.localServer.id)
+                    .mapToInt(i -> i.currentPlayers)
+                    .sum() + Players.getInstance().getNumberOfPlayers();
+
+            if (players != lastPlayers) {
+                jda.getPresence().setGame(Game.watching(String.format("%d player%s online", players, players == 1 ? "" : "s")));
+                GlobalChatMod.logInfo(String.format("Sent status update (%d) players", players));
+                lastPlayers = players;
+            }
+        }
+
     }
 }

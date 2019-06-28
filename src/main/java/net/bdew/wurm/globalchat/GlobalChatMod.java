@@ -1,5 +1,6 @@
 package net.bdew.wurm.globalchat;
 
+import com.wurmonline.server.Servers;
 import com.wurmonline.server.creatures.Communicator;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -10,7 +11,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class GlobalChatMod implements WurmServerMod, Configurable, PreInitable, Initable, PlayerMessageListener, ServerStartedListener {
+public class GlobalChatMod implements WurmServerMod, Configurable, PreInitable, Initable, PlayerMessageListener, ServerStartedListener, ServerPollListener {
     private static final Logger logger = Logger.getLogger("GlobalChatMod");
 
     static String botToken;
@@ -121,5 +122,11 @@ public class GlobalChatMod implements WurmServerMod, Configurable, PreInitable, 
     @Override
     public void onServerStarted() {
         ChatHandler.serverStarted();
+    }
+
+    @Override
+    public void onServerPoll() {
+        if (Servers.localServer.LOGINSERVER)
+            DiscordHandler.poll();
     }
 }
