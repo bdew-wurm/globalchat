@@ -2,17 +2,17 @@ package net.bdew.wurm.globalchat;
 
 import com.wurmonline.server.Players;
 import com.wurmonline.server.Servers;
-import net.dv8tion.jda.core.AccountType;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.entities.ChannelType;
-import net.dv8tion.jda.core.entities.Game;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.events.StatusChangeEvent;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.ChannelType;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.events.StatusChangeEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 
 import javax.security.auth.login.LoginException;
 import java.util.Arrays;
@@ -53,7 +53,7 @@ public class DiscordHandler extends ListenerAdapter {
         }
 
         try {
-            jda = new JDABuilder(AccountType.BOT).setToken(GlobalChatMod.botToken).addEventListener(new DiscordHandler()).build();
+            jda = JDABuilder.create(GlobalChatMod.botToken, GatewayIntent.GUILD_MESSAGES).addEventListeners(new DiscordHandler()).build();
         } catch (LoginException e) {
             GlobalChatMod.logException("Error connecting to discord", e);
         }
@@ -63,14 +63,11 @@ public class DiscordHandler extends ListenerAdapter {
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.isFromType(ChannelType.TEXT) && !event.getAuthor().isBot()) {
             CustomChannel channel = CustomChannel.findByDiscordName(event.getTextChannel().getName());
-            if (channel != null && !channel.discordOnly) {
-                String name = event.getMember().getNickname();
-                if (name == null) name = event.getAuthor().getName();
+            if (channel != null && !channel.discordOnly && event.getMember() != null) {
+                String name = event.getMember().getEffectiveName();
                 for (Message.Attachment att : event.getMessage().getAttachments()) {
                     String url = att.getUrl();
-                    if (url != null) {
-                        ChatHandler.sendToPlayersAndServers(channel, "@" + name, url, -10L, -1, -1, -1);
-                    }
+                    ChatHandler.sendToPlayersAndServers(channel, "@" + name, url, -10L, -1, -1, -1);
                 }
                 String msg = event.getMessage().getContentDisplay().trim();
                 for (Map.Entry<String, String> p : emojis.entrySet()) {
@@ -140,7 +137,7 @@ public class DiscordHandler extends ListenerAdapter {
                     .sum() + Players.getInstance().getNumberOfPlayers();
 
             if (players != lastPlayers) {
-                jda.getPresence().setGame(Game.watching(String.format("%d player%s online", players, players == 1 ? "" : "s")));
+                jda.getPresence().setActivity(Activity.watching(String.format("%d player%s online", players, players == 1 ? "" : "s")));
                 GlobalChatMod.logInfo(String.format("Sent status update (%d) players", players));
                 lastPlayers = players;
             }
