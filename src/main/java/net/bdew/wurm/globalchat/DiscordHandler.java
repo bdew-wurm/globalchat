@@ -5,14 +5,12 @@ import com.wurmonline.server.Servers;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.ChannelType;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.StatusChangeEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import javax.security.auth.login.LoginException;
 import java.util.Arrays;
@@ -53,7 +51,10 @@ public class DiscordHandler extends ListenerAdapter {
         }
 
         try {
-            jda = JDABuilder.create(GlobalChatMod.botToken, GatewayIntent.GUILD_MESSAGES).addEventListeners(new DiscordHandler()).build();
+            jda = JDABuilder.create(GlobalChatMod.botToken, GatewayIntent.GUILD_MESSAGES)
+                    .disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE, CacheFlag.EMOTE, CacheFlag.CLIENT_STATUS)
+                    .addEventListeners(new DiscordHandler())
+                    .build();
         } catch (LoginException e) {
             GlobalChatMod.logException("Error connecting to discord", e);
         }
@@ -108,10 +109,13 @@ public class DiscordHandler extends ListenerAdapter {
                 lastPlayers = -1;
                 lastStatusUpdate = Long.MIN_VALUE;
                 poll();
+                Guild guild = jda.getGuildsByName(GlobalChatMod.serverName, true).get(0);
+                GlobalChatMod.logInfo(String.format("Guild: %s -> %s", GlobalChatMod.serverName, guild.getId()));
                 for (CustomChannel channel : CustomChannel.values()) {
-                    ConcurrentLinkedQueue<String> sendQueue = sendQueues.get(channel);
-                    if (!sendQueue.isEmpty()) {
-                        TextChannel discordChannel = jda.getGuildsByName(GlobalChatMod.serverName, true).get(0).getTextChannelsByName(channel.discordName, true).get(0);
+                    if (channel.discordName != null) {
+                        ConcurrentLinkedQueue<String> sendQueue = sendQueues.get(channel);
+                        TextChannel discordChannel = guild.getTextChannelsByName(channel.discordName, true).get(0);
+                        GlobalChatMod.logInfo(String.format("Channel: %s -> %s -> %s", channel.name(), channel.discordName, discordChannel.getId()));
                         while (!sendQueue.isEmpty()) {
                             String msg = sendQueue.poll();
                             GlobalChatMod.logInfo(String.format("Sending queued: [%s] %s", channel, msg));
@@ -119,6 +123,8 @@ public class DiscordHandler extends ListenerAdapter {
                             builder.append(msg);
                             discordChannel.sendMessage(builder.build()).queue(null, e -> GlobalChatMod.logException("Error sending to discord", e));
                         }
+                    } else {
+                        GlobalChatMod.logInfo(String.format("Channel: %s -> [Discord name unset]", channel.name()));
                     }
                 }
             }

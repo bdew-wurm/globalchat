@@ -8,7 +8,6 @@ version "1.3"
 
 repositories {
     mavenCentral()
-    maven { url "https://jcenter.bintray.com" }
     maven { url "https://gotti.no-ip.org/maven/repository" }
     maven { url 'https://jitpack.io' }
 }
@@ -19,8 +18,8 @@ configurations {
 }
 
 dependencies {
-    shadowed 'net.dv8tion:JDA:4.2.0_212'
-    shadowed 'org.slf4j:slf4j-jdk14:1.7.25'
+    shadowed 'net.dv8tion:JDA:5.0.0-alpha.11'
+    shadowed 'org.slf4j:slf4j-jdk14:1.7.36'
     compile 'org.gotti.wurmunlimited:server-modlauncher:0.43'
     compile 'com.github.bdew-wurm:bdew_server_mod_tools:v1.0.0'
 }
