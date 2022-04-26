@@ -5,6 +5,7 @@ import com.wurmonline.server.Servers;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.StatusChangeEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -111,11 +112,18 @@ public class DiscordHandler extends ListenerAdapter {
                 poll();
                 Guild guild = jda.getGuildsByName(GlobalChatMod.serverName, true).get(0);
                 GlobalChatMod.logInfo(String.format("Guild: %s -> %s", GlobalChatMod.serverName, guild.getId()));
+                Role role = guild.getBotRole();
+                if (role != null)
+                    GlobalChatMod.logInfo(String.format("Guild permissions: %s", role.getPermissions().stream().map(Permission::getName).collect(Collectors.joining(", "))));
+                else
+                    GlobalChatMod.logWarning("Unable to retrieve my role!");
                 for (CustomChannel channel : CustomChannel.values()) {
                     if (channel.discordName != null) {
                         ConcurrentLinkedQueue<String> sendQueue = sendQueues.get(channel);
                         TextChannel discordChannel = guild.getTextChannelsByName(channel.discordName, true).get(0);
-                        GlobalChatMod.logInfo(String.format("Channel: %s -> %s -> %s", channel.name(), channel.discordName, discordChannel.getId()));
+                        GlobalChatMod.logInfo(String.format("Channel: %s -> %s -> %s (Permissions: %s)",
+                                channel.name(), channel.discordName, discordChannel.getId(),
+                                role == null ? "???" : role.getPermissions(discordChannel).stream().map(Permission::getName).collect(Collectors.joining(", "))));
                         while (!sendQueue.isEmpty()) {
                             String msg = sendQueue.poll();
                             GlobalChatMod.logInfo(String.format("Sending queued: [%s] %s", channel, msg));
