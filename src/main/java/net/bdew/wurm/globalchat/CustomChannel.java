@@ -4,7 +4,8 @@ public enum CustomChannel {
     GLOBAL("Global", (byte) -1, true, false),
     HELP("Help", (byte) -2, true, false),
     INFO("Info", (byte) -3, false, false),
-    TICKETS("*", (byte) -3, false, true);
+    TICKETS("*", (byte) -3, false, true),
+    BROADCAST("*", (byte) -4, false, false);
 
     public final String ingameName;
     public String discordName;

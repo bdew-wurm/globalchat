@@ -4,16 +4,20 @@ import com.wurmonline.server.Players;
 import com.wurmonline.server.Servers;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.StatusChangeEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 
-import javax.security.auth.login.LoginException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,11 +56,11 @@ public class DiscordHandler extends ListenerAdapter {
         }
 
         try {
-            jda = JDABuilder.create(GlobalChatMod.botToken, GatewayIntent.GUILD_MESSAGES)
-                    .disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE, CacheFlag.EMOTE, CacheFlag.CLIENT_STATUS)
+            jda = JDABuilder.create(GlobalChatMod.botToken, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
+                    .disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE, CacheFlag.CLIENT_STATUS, CacheFlag.STICKER, CacheFlag.ONLINE_STATUS, CacheFlag.SCHEDULED_EVENTS, CacheFlag.EMOJI)
                     .addEventListeners(new DiscordHandler())
                     .build();
-        } catch (LoginException e) {
+        } catch (Exception e) {
             GlobalChatMod.logException("Error connecting to discord", e);
         }
     }
@@ -64,7 +68,7 @@ public class DiscordHandler extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.isFromType(ChannelType.TEXT) && !event.getAuthor().isBot()) {
-            CustomChannel channel = CustomChannel.findByDiscordName(event.getTextChannel().getName());
+            CustomChannel channel = CustomChannel.findByDiscordName(event.getChannel().getName());
             if (channel != null && !channel.discordOnly && event.getMember() != null) {
                 String name = event.getMember().getEffectiveName();
                 for (Message.Attachment att : event.getMessage().getAttachments()) {
@@ -92,8 +96,8 @@ public class DiscordHandler extends ListenerAdapter {
                 GlobalChatMod.logInfo(String.format("Discord not ready, queueing: [%s] %s", channel, msg));
                 sendQueues.get(channel).add(msg);
             } else {
-                MessageBuilder builder = new MessageBuilder();
-                builder.append(msg);
+                MessageCreateBuilder builder = new MessageCreateBuilder();
+                builder.setContent(msg);
                 jda.getGuildsByName(GlobalChatMod.serverName, true).get(0).getTextChannelsByName(channel.discordName, true).get(0).sendMessage(builder.build())
                         .queue(null, e -> GlobalChatMod.logException("Error sending to discord", e));
             }
@@ -127,8 +131,8 @@ public class DiscordHandler extends ListenerAdapter {
                         while (!sendQueue.isEmpty()) {
                             String msg = sendQueue.poll();
                             GlobalChatMod.logInfo(String.format("Sending queued: [%s] %s", channel, msg));
-                            MessageBuilder builder = new MessageBuilder();
-                            builder.append(msg);
+                            MessageCreateBuilder builder = new MessageCreateBuilder();
+                            builder.setContent(msg);
                             discordChannel.sendMessage(builder.build()).queue(null, e -> GlobalChatMod.logException("Error sending to discord", e));
                         }
                     } else {

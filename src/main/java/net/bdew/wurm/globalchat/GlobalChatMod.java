@@ -16,6 +16,7 @@ public class GlobalChatMod implements WurmServerMod, Configurable, PreInitable, 
 
     static String botToken;
     static String serverName;
+    static String lastBroadcastsFilePath;
 
     public static void logException(String msg, Throwable e) {
         if (logger != null)
@@ -36,9 +37,11 @@ public class GlobalChatMod implements WurmServerMod, Configurable, PreInitable, 
     public void configure(Properties properties) {
         botToken = properties.getProperty("botToken");
         serverName = properties.getProperty("serverName");
+        lastBroadcastsFilePath = properties.getProperty("lastBroadcastsFilePath");
         CustomChannel.GLOBAL.discordName = properties.getProperty("globalName");
         CustomChannel.HELP.discordName = properties.getProperty("helpName");
         CustomChannel.TICKETS.discordName = properties.getProperty("ticketName");
+        CustomChannel.BROADCAST.discordName = properties.getProperty("broadcastName");
     }
 
     @Override
@@ -63,21 +66,26 @@ public class GlobalChatMod implements WurmServerMod, Configurable, PreInitable, 
             ctPlayer.getMethod("isGlobalChat", "()Z").setBody("return false;");
             ctPlayer.getMethod("seesPlayerAssistantWindow", "()Z").setBody("return false;");
 
-            CtClass CtServer = classPool.getCtClass("com.wurmonline.server.Server");
+            CtClass ctServer = classPool.getCtClass("com.wurmonline.server.Server");
 
-            CtServer.getMethod("shutDown", "()V").insertBefore("net.bdew.wurm.globalchat.ChatHandler.serverStopped();");
-            CtServer.getMethod("broadCastNormal", "(Ljava/lang/String;Z)V").insertBefore("net.bdew.wurm.globalchat.ChatHandler.handleBroadcast($1);");
-            CtServer.getMethod("broadCastSafe", "(Ljava/lang/String;ZB)V").insertBefore("net.bdew.wurm.globalchat.ChatHandler.handleBroadcast($1);");
-            CtServer.getMethod("broadCastAlert", "(Ljava/lang/String;ZB)V").insertBefore("net.bdew.wurm.globalchat.ChatHandler.handleBroadcast($1);");
+            ctServer.getMethod("shutDown", "()V").insertBefore("net.bdew.wurm.globalchat.ChatHandler.serverStopped();");
+            ctServer.getMethod("broadCastNormal", "(Ljava/lang/String;Z)V").insertBefore("net.bdew.wurm.globalchat.ChatHandler.handleBroadcast($1);");
+            ctServer.getMethod("broadCastSafe", "(Ljava/lang/String;ZB)V").insertBefore("net.bdew.wurm.globalchat.ChatHandler.handleBroadcast($1);");
+            ctServer.getMethod("broadCastAlert", "(Ljava/lang/String;ZB)V").insertBefore("net.bdew.wurm.globalchat.ChatHandler.handleBroadcast($1);");
 
-            classPool.getCtClass("com.wurmonline.server.ServerEntry").getMethod("setAvailable", "(ZZIIII)V")
+            CtClass ctServerEntry = classPool.getCtClass("com.wurmonline.server.ServerEntry");
+            ctServerEntry.getMethod("setAvailable", "(ZZIIII)V")
                     .insertBefore("if (this.isAvailable != $1) net.bdew.wurm.globalchat.ChatHandler.serverAvailable(this, $1);");
+
+            ctServerEntry.getMethod("createTwit", "(Ljava/lang/String;)Lcom/wurmonline/server/Twit;")
+                    .insertBefore("net.bdew.wurm.globalchat.ChatHandler.sendTwit($1); return null;");
 
             classPool.getCtClass("com.wurmonline.server.support.Tickets").getMethod("addTicket", "(Lcom/wurmonline/server/support/Ticket;Z)Lcom/wurmonline/server/support/Ticket;")
                     .insertBefore("net.bdew.wurm.globalchat.TicketHandler.updateTicket($1);");
 
             classPool.getCtClass("com.wurmonline.server.support.Ticket").getMethod("addTicketAction", "(Lcom/wurmonline/server/support/TicketAction;)V")
                     .insertBefore("net.bdew.wurm.globalchat.TicketHandler.addTicketAction(this, $1);");
+
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

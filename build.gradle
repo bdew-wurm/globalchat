@@ -18,10 +18,13 @@ configurations {
 }
 
 dependencies {
-    shadowed 'net.dv8tion:JDA:5.0.0-alpha.11'
+    shadowed 'net.dv8tion:JDA:5.0.0-beta.8'
     shadowed 'org.slf4j:slf4j-jdk14:1.7.36'
     compile 'org.gotti.wurmunlimited:server-modlauncher:0.43'
     compile 'com.github.bdew-wurm:bdew_server_mod_tools:v1.0.0'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.14.1'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
+
 }
 
 shadowJar {
